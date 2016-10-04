@@ -5,7 +5,7 @@
 
     error_reporting(E_ALL);
     session_start();
-    
+
     //phpinfo();
     
     require_once('db.php');

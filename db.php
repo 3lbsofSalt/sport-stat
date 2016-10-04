@@ -10,7 +10,7 @@ class db {
     public $username;
     public $password;
     public $link = 0;
-
+    
     var $errors;
 
     function __construct() {
@@ -27,6 +27,7 @@ class db {
 	    if($this->link->connect_errno) {
 		$this->errors = "Database didn't connect because: " . $this->link->connect_errno;
 	    }
+	    return $this->link;
 	}
     }
 
@@ -50,33 +51,33 @@ class db {
 	$this->table = $table;
     }
     
-    function addPlayer($array) {                                      	/* Adds a complete player stats; $array should be a key=>value array with the keys of playerNum, name, pos(ition), goals, assists; */
+    function addPlayer($array) {              						// Adds a complete player stats; $array should be a key=>value array with the keys of playerNum, name, pos(ition), goals, assists; */
 	
 	$this->connect();
 
 	$this->setTable('playerStats');
-	$string = "INSERT INTO " . $this->table . " ";                	/* Beginning of query to insert in database */
+	$string = "INSERT INTO " . $this->table . " ";                	// Beginning of query to insert in database */
 	
-	$num = count($array);                                         	/* Counts # of array keys */
+	$num = count($array);                                         	// Counts # of array keys */
 	foreach($array as $key=>$value) {
-	    $keys .= " " .$key;			 			/* Adds a key to the final array each time around */
+	    $keys .= " " .$key;			 								// Adds a key to the final array each time around */
 	    
-	    $value = mysqli_real_escape_string($this->link, $value);	/* Escapes values from having any illegal characters */
-	    $values .= ' "'.$value.'"';					/* Adds escaped value to the values array */
+	    $value = mysqli_real_escape_string($this->link, $value);	// Escapes values from having any illegal characters */
+	    $values .= ' "'.$value.'"';									// Adds escaped value to the values array */
 	  
-	    if($num > 1){						/* This block wont be executed on the last array value; It adds the commas between the keys and values arrays */
-		$keys .= ",";
-		$values .= ",";
+		if($num > 1){												// This block wont be executed on the last array value; It adds the commas between the keys and values arrays */
+			$keys .= ",";
+			$values .= ",";
 	    }
-	    $num -= 1;							/* Decrements to keep track of current array value */
+	    $num -= 1;													// Decrements to keep track of current array value */
 	}
 	
-	$string .= '(' .$keys. ') VALUES (' .$values. ')';		/* Finishes creating the query string; It ends up looking like:
-									 * INSERT INTO $table ($key, $key, $key) VALUES ("$value", "$value", "$value");
-									 */
+	$string .= '(' .$keys. ') VALUES (' .$values. ')';				/* Finishes creating the query string; It ends up looking like:
+									 									* INSERT INTO $table ($key, $key, $key) VALUES ("$value", "$value", "$value");
+									 								*/
 	
 	
-	$this->link->query($string);				/* Performs query */
+	$this->link->query($string);									/* Performs query */
 	
 	return true;
     }
@@ -118,20 +119,26 @@ class db {
 	$this->connect();
 	$this->setTable('playerStats');
 
-	$string = "SELECT * FROM playerStats";
+	$string = "SELECT playerNum, name, pos, goals, assists FROM playerStats";
 	$results = $this->link->query($string);
 
-	$html = "<table style='width:100%'>";
-
+	$html = "<table style='width:auto;' class='statTable'>";
+	$html .= "<tr class='row top'> <td class='topstuf column'>Player Number</td><td class='topstuf column'>Name</td><td class='topstuf column'>Position</td><td class='topstuf column'>Goals</td><td class='topstuf column'>Assists</td></tr>";
 	foreach($results as $array){
 	    $html .= "<tr class='row'>";
 	    foreach($array as $value){
 		$html .= "<td class='column'>" . $value . "</td>";
 	    }
-	    $html .= "</tr>";
+	    $html .= "</tr> <br />";
 	}
 
 	$html .= "</table>";
+	$html .= "<style>";
+	$html .= ".column {font-family:Trebuchet, Trebuchet MS;";
+	$html .= "text-align: center; border: 2px black solid; width:236px;}";
+	$html .= ".topstuf{ background-color: #fac31e;}";
+	$html .= ".statTable{border-collapse:collapse; position:absolute; bottom: 140px;}";
+	
 	echo($html);
     }
 }
