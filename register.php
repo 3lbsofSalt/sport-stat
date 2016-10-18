@@ -2,7 +2,7 @@
 <html>
     <?php
     session_start();
-    require_once('dontInsert.php');
+    require_once('authenticate.php');
 
     $auth = new auth();
     if(!empty($_POST['username']) && !empty(['pass'])){

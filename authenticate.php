@@ -4,11 +4,15 @@ require_once('db.php');
 
 class auth {
 
+    //Class global variable for db class
     public $db;
 
+    //Defait user data for incorect login or token
     var $userData = array('username' => 'Guest',
                           'password' => 'Guest');
-    
+
+    //Constructs object variables and sets $db to db class
+    //Also checks user token and calls guest() if it's incorrect
     function __construct() {
         $this->db = new db;
         $this->db->table = 'users';
@@ -28,15 +32,19 @@ class auth {
         }
     }
 
+    //Sets authenticating user to guest
     function guest(){
         $_SESSION['user'] = $this->userData;
     }
     
+    //Only use function manually guard page heavily
+    //Sets admin user
+    //Takes array with username, password, password2
     function register($raw) {
         $this->db->table ='users';
         $this->db->connect();
         if($raw) {
-            $errors = $this->validate($raw);
+            $errors = $this->validate($raw); //Checks array for validity in a database
             if(!$errors) {
                 $data = array();
                 $data['reg_date'] = time();
@@ -58,10 +66,13 @@ class auth {
         return false;
     }
 
+    //User login
+    //Expect username and password
     function login($username, $password) {
         $this->db->connect();
         $this->db->table = 'users';
-        $string = "SELECT * FROM users WHERE username = '$username'";
+        $string = $this->db->link->prepare("SELECT * FROM users WHERE username = ?");
+        $string->bind_param('s', $username);
         $res = $this->db->link->query($string);
         $res->fetch_assoc();
         if($res) {
@@ -72,7 +83,6 @@ class auth {
             $tmp_pass = $this->hash_password($user['reg_date'], $password);
       
             if($tmp_pass == $user['pwd']){
-                echo "true";
                 $token = session_id();
                 $user['token'] = $this->set_token($user['user_id'], $token, $user['pwd']);
                 unset($user['pwd']);
@@ -86,6 +96,7 @@ class auth {
         return false;
     }
 
+    //Checks user token
     function check($username, $token) {
         $string = "SELECT * FROM users WHERE username = '$username'";
         $tmp = $this->db->link->query($string);
@@ -97,6 +108,7 @@ class auth {
         return true;
     }
 
+    //Sets user token
     private function set_token($user_id, $session_id, $password) {
         $date = date('Ymd');
         $raw_token = $session_id.$date.substr($password, 7, 20);
@@ -108,7 +120,7 @@ class auth {
     }
     
     //Expect 'username', 'password', and 'password2' in $array
-    
+    //Validates new user information
     private function validate($array){
         $errors = array(); //1 not submitted, 2 not unique, 3 not matching, 4 not long enough
         if(array_key_exists('password', $array) && array_key_exists('password2', $array)){
@@ -152,6 +164,7 @@ class auth {
             }
     }
 
+    //Password hashing algorithm
     private function hash_password($reg_date, $pass){
         $pre = $this->encode($reg_date);
         $pos = substr($reg_date, 5, 1);

@@ -6,14 +6,14 @@ class db {
 
     public $table;     //Database table
     public $database;  //Database
-    public $host;      
-    public $username;
-    public $password;
-    public $link = 0;
+    public $host;      //Host ip address
+    public $username;  //host username
+    public $password;  //host password
+    public $link = 0;  //Database variable, used for most of the querys and functions
     
-    var $errors;
+    var $errors;  		//Currently unimplemented errors variable
 
-    function __construct() {
+    function __construct() {	//Constructs object and sets variables needed for connect
 	global $SETTINGS;
 	$this->database = $SETTINGS['database'];
 	$this->host = $SETTINGS['host'];
@@ -21,33 +21,35 @@ class db {
 	$this->password = $SETTINGS['password'];
     }
 
-    function connect() {
-	if(is_int($this->link)){
+    function connect() {		//Connects to the database
+	if(is_int($this->link)){	//Only connect if $link is not an object
 	    $this->link = new mysqli($this->host, $this->username, $this->password, $this->database);
-	    if($this->link->connect_errno) {
+	    if($this->link->connect_errno) { //Error handleing
 		$this->errors = "Database didn't connect because: " . $this->link->connect_errno;
 	    }
 	    return $this->link;
 	}
     }
 
+	//Query function used to retrieve data
+	//$string is the query string, $force array will make the return value be an multidimensional array if set to true
     function query($string, $force_array = false) {
 	$this->connect();
 	$res = $this->link->query($string);
-	if($res) {
-	    if(is_bool($res)) {
+	if($res) {	//If query contains a value
+	    if(is_bool($res)) { //if results are boolean it returns a bool
 		return true;
 	    }
 	    $rows = $res->num_rows;
-	    if($rows > 1 or $force_array){
+	    if($rows > 1 or $force_array){ //Returns all rows in a multidimensional array
 		return $res->fetch_all($resulttype = MYSQL_ASSOC);
 	    } else {
-		return $res->fetch_assoc();
+		return $res->fetch_assoc(); //Return associative array
 	    }
 	}
     }
     
-    function setTable($table) {
+    function setTable($table) {	//Used to set objects database table in a secure way
 	$this->table = $table;
     }
     
@@ -82,7 +84,10 @@ class db {
 	return true;
     }
 
-    function updateStats($array){
+	//Updates statistics based on an array that contains values in the database
+	//Currently accepst an array with int playerNum, varchar name, varchar pos, int goals, int assists
+	//playerNum is required.
+    function updateStats($array){									
 	$this->connect();
 	$this->setTable('playerStats');
 	
@@ -90,9 +95,9 @@ class db {
 
 	$update = '';
 
-	$num = count($array);
-	foreach($array as $key=>$value) {
-	    $update .= $key . ' = "' . $value . '"';
+	$num = count($array); 
+	foreach($array as $key=>$value) { 				//Runs through array values adding them to the update string
+	    $update .= $key . ' = "' . $value . '"';	
 	    if($num > 1) {
 		$update .= ', ';
 	    }
@@ -105,6 +110,8 @@ class db {
 	
     }
 
+	//Deletes player based on their Player Number
+	//requires playerNum
     function deletePlayer($playNum){
 	$this->connect();
 	$this->setTable('playerStats');
@@ -115,6 +122,7 @@ class db {
 	$this->link->query($string);
     }
 	
+	//Gathers all player stats and injects the html based on where the function was called
     function getStats() {
 	$this->connect();
 	$this->setTable('playerStats');
