@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html>
     <?php
+
+	/* To use this file, make sure it has access to db.php, settings.php, and authenticate.php_ini_loaded_file
+	DO NOT PUT IN WEBSITE UNLESS HEAVILY GUARDED AND REFACTORED */
+
     session_start();
     require_once('authenticate.php');
 
